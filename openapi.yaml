@@ -24,13 +24,30 @@ paths:
             schema:
               $ref: "#/components/schemas/ItemRequestBody"
       responses:
-        "200":
+        "201":
           description: The created item
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Item"
   /items/{id}:
+    get:
+      summary: Get an existing item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The existing item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "404":
+          description: Item not found
     put:
       summary: Update an existing item
       parameters:
