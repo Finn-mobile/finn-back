@@ -3,7 +3,12 @@ const app = express();
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
 const { validateFields } = require("./helper");
+const swaggerUi = require("swagger-ui-express");
+const yaml = require("yamljs");
+
 app.use(bodyParser.json());
+const openapiDocument = yaml.load("./openapi.yaml");
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));
 
 let items = [
   {

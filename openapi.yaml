@@ -1,0 +1,89 @@
+openapi: 3.0.0
+info:
+  title: Items API
+  version: 1.0.0
+paths:
+  /items:
+    get:
+      summary: Get all items
+      responses:
+        "200":
+          description: A list of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Item"
+    post:
+      summary: Create a new item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemRequestBody"
+      responses:
+        "200":
+          description: The created item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+  /items/{id}:
+    put:
+      summary: Update an existing item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemRequestBody"
+      responses:
+        "200":
+          description: The updated item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "404":
+          description: Item not found
+    delete:
+      summary: Delete an existing item
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Item deleted
+        "404":
+          description: Item not found
+components:
+  schemas:
+    ItemRequestBody:
+      type: object
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        value:
+          type: number
+        category:
+          type: string
+    Item:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+        - $ref: "#/components/schemas/ItemRequestBody"
