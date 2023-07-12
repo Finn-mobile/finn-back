@@ -26,9 +26,19 @@
   $ npm install
   ```
 
+## .env setup
+
+- Usando o [.env_template](.env_template)
+  - Crie um novo arquivo .env
+  - Troque o coloque seus valores no lugar de user, password e your_db
+
 ## Usage
 
+- Semeie o banco de dados
+  ```shell
+  $ npx prisma db seed
+  ```
 - Inicie o server
   ```shell
-  $ npm start
+  $ npm run dev
   ```
