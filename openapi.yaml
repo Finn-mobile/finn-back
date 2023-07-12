@@ -1,38 +1,38 @@
 openapi: 3.0.0
 info:
-  title: Items API
+  title: Finn API
   version: 1.0.0
 paths:
-  /items:
+  /expenses:
     get:
-      summary: Get all items
+      summary: Get all expenses
       responses:
         "200":
-          description: A list of items
+          description: A list of expenses
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Item"
+                  $ref: "#/components/schemas/Expense"
     post:
-      summary: Create a new item
+      summary: Create a new expense
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ItemRequestBody"
+              $ref: "#/components/schemas/ExpenseBody"
       responses:
         "201":
-          description: The created item
+          description: The created expense
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Item"
-  /items/{id}:
+                $ref: "#/components/schemas/Expense"
+  /expenses/{id}:
     get:
-      summary: Get an existing item
+      summary: Get an existing expense
       parameters:
         - in: path
           name: id
@@ -41,15 +41,15 @@ paths:
             type: string
       responses:
         "200":
-          description: The existing item
+          description: The existing expense
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Item"
+                $ref: "#/components/schemas/Expense"
         "404":
-          description: Item not found
+          description: Expense not found
     put:
-      summary: Update an existing item
+      summary: Update an existing expense
       parameters:
         - in: path
           name: id
@@ -61,18 +61,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ItemRequestBody"
+              $ref: "#/components/schemas/ExpenseBody"
       responses:
         "200":
-          description: The updated item
+          description: The updated expense
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Item"
+                $ref: "#/components/schemas/Expense"
         "404":
-          description: Item not found
+          description: Expense not found
     delete:
-      summary: Delete an existing item
+      summary: Delete an existing expense
       parameters:
         - in: path
           name: id
@@ -81,12 +81,31 @@ paths:
             type: string
       responses:
         "200":
-          description: Item deleted
+          description: Expense deleted
         "404":
-          description: Item not found
+          description: Expense not found
+  /categories:
+    get:
+      summary: Get all categories
+      responses:
+        "200":
+          description: A list of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
 components:
   schemas:
-    ItemRequestBody:
+    Category:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+    ExpenseBody:
       type: object
       properties:
         type:
@@ -95,12 +114,20 @@ components:
           type: string
         value:
           type: number
-        category:
+        category_name:
           type: string
-    Item:
-      allOf:
-        - type: object
-          properties:
-            id:
-              type: string
-        - $ref: "#/components/schemas/ItemRequestBody"
+    Expense:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        value:
+          type: number
+        categoryId:
+          type: number
+        category:
+          $ref: "#/components/schemas/Category"
