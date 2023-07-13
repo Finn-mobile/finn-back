@@ -6,6 +6,27 @@ paths:
   /expenses:
     get:
       summary: Get all expenses
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+        - in: query
+          name: description
+          schema:
+            type: string
+        - in: query
+          name: min_value
+          schema:
+            type: number
+        - in: query
+          name: max_value
+          schema:
+            type: number
+        - in: query
+          name: category_name
+          schema:
+            type: string
       responses:
         "200":
           description: A list of expenses

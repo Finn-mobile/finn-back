@@ -11,8 +11,25 @@ interface ExpenseBody {
 
 export class ExpenseController {
   static async getAllExpenses(req: Request, res: Response, next: NextFunction) {
+    const { type, description, category_name } = req.query as any;
+    const { min_value, max_value } = req.query;
+
     const allExpenses = await prisma.expense.findMany({
       include: { category: true },
+      where: {
+        type,
+        description: {
+          contains: description,
+          mode: "insensitive",
+        },
+        value: {
+          gte: Number(min_value) || undefined,
+          lte: Number(max_value) || undefined,
+        },
+        category: {
+          name: category_name,
+        },
+      },
     });
 
     res.json(allExpenses);
