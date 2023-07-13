@@ -1,0 +1,26 @@
+version: '3'
+services:
+  app:
+    container_name: finn-app
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://user:password@finn-db:5432/finndb?schema=public
+    command: bash -c "npx prisma migrate dev --name init && npx prisma db seed && npm run dev"
+  db:
+    container_name: finn-db
+    image: postgres
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: finndb
+
+      
