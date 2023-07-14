@@ -15,6 +15,11 @@ app.post("/expenses", ExpenseController.postExpense);
 app.get("/expenses/:id", ExpenseController.getExpenseById);
 app.put("/expenses/:id", ExpenseController.updateExpense);
 app.delete("/expenses/:id", ExpenseController.deleteExpense);
+app.post(
+  "/expenses/input",
+  ExpenseController.expenseInputMiddleware,
+  ExpenseController.postExpense
+);
 
 app.get("/categories", CategoryController.getAllCategories);
 

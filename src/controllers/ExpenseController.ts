@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
+import axios from "axios";
 const prisma = new PrismaClient();
 
 interface ExpenseBody {
@@ -10,6 +11,53 @@ interface ExpenseBody {
 }
 
 export class ExpenseController {
+  static async expenseInputMiddleware(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    const data = {
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "system",
+          content:
+            'Você será um tradutor de texto natural para JSON, os campos que você gererá serão: type (que pode ser: "GASTO", "RECEBIMENTO"), description(string), value(float), category_name(que pode ser: "Transporte", "Alimentação",  "Moradia", "Lazer", "Educação", "Saúde", "Compras", "Serviços", "Outros")',
+        },
+        {
+          role: "user",
+          content:
+            "Traduza para JSON os texto que está entre backticks\n`Comprei um lanche de 20 reais`",
+        },
+        {
+          role: "assistant",
+          content:
+            '{\n  "type": "GASTO",\n  "description": "Lanche",\n  "value": 20,\n  "category_name": "Alimentação"\n}',
+        },
+        {
+          role: "user",
+          content: `Traduza para JSON os texto que está entre backticks\n\`${req.body.input}\``,
+        },
+      ],
+      temperature: 0,
+    };
+
+    const openai_api_key = process.env.GPT_BEARER_TOKEN;
+    const response = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${openai_api_key}`,
+        },
+      }
+    );
+
+    req.body = JSON.parse(response.data.choices[0].message.content);
+    next();
+  }
+
   static async getAllExpenses(req: Request, res: Response, next: NextFunction) {
     const { type, description, category_name } = req.query as any;
     const { min_value, max_value } = req.query;
