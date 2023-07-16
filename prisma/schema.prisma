@@ -1,27 +1,41 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "binary"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Expense {
-  id          Int    @id @default(autoincrement())
-  type        String
+  id          Int      @id @default(autoincrement())
+  type        Type
   description String
   value       Float
-  category    Category  @relation(fields: [category_id], references: [id])
   category_id Int
+  user_id     Int
+  category    Category @relation(fields: [category_id], references: [id])
+  user        User     @relation(fields: [user_id], references: [id])
 }
 
 model Category {
-  id Int @id @default(autoincrement())
-  name String @unique
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  expenses Expense[]
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   expenses  Expense[]
+}
+
+enum Type {
+  Gasto
+  Recebimento
 }
