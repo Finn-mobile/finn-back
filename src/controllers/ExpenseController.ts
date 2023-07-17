@@ -1,28 +1,25 @@
-import { PrismaClient, Prisma } from "@prisma/client";
-import { NextFunction, Request, Response } from "express";
+import { PrismaClient, Prisma, Type } from "@prisma/client";
+import { NextFunction, Response } from "express";
 import axios from "axios";
+import { AuthRequest } from "../@types/authRequest";
 const prisma = new PrismaClient();
 
 interface ExpenseBody {
   description: string;
-  type: string;
+  type: Type;
   value: number;
   category_name: string;
 }
 
 export class ExpenseController {
-  static async expenseInputMiddleware(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) {
+  static async expenseInputMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
     const data = {
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "system",
           content:
-            'Você será um tradutor de texto natural para JSON, os campos que você gererá serão: type (que pode ser: "GASTO", "RECEBIMENTO"), description(string), value(float), category_name(que pode ser: "Transporte", "Alimentação",  "Moradia", "Lazer", "Educação", "Saúde", "Compras", "Serviços", "Outros")',
+            'Você será um tradutor de texto natural para JSON, os campos que você gererá serão: type (que pode ser: "Gasto", "Recebimento"), description(string), value(float), category_name(que pode ser: "Transporte", "Alimentação",  "Moradia", "Lazer", "Educação", "Saúde", "Compras", "Serviços", "Outros")',
         },
         {
           role: "user",
@@ -32,7 +29,7 @@ export class ExpenseController {
         {
           role: "assistant",
           content:
-            '{\n  "type": "GASTO",\n  "description": "Lanche",\n  "value": 20,\n  "category_name": "Alimentação"\n}',
+            '{\n  "type": "Gasto",\n  "description": "Lanche",\n  "value": 20,\n  "category_name": "Alimentação"\n}',
         },
         {
           role: "user",
@@ -43,22 +40,19 @@ export class ExpenseController {
     };
 
     const openai_api_key = process.env.GPT_BEARER_TOKEN;
-    const response = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      data,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${openai_api_key}`,
-        },
-      }
-    );
+    const response = await axios.post("https://api.openai.com/v1/chat/completions", data, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${openai_api_key}`,
+      },
+    });
 
     req.body = JSON.parse(response.data.choices[0].message.content);
     next();
   }
 
-  static async getAllExpenses(req: Request, res: Response, next: NextFunction) {
+  static async getAllExpenses(req: AuthRequest, res: Response) {
+    const userId = req.user?.id;
     const { type, description, category_name } = req.query as any;
     const { min_value, max_value } = req.query;
 
@@ -77,16 +71,23 @@ export class ExpenseController {
         category: {
           name: category_name,
         },
+        user: {
+          id: userId,
+        },
+      },
+      orderBy: {
+        id: "asc",
       },
     });
 
     res.json(allExpenses);
   }
 
-  static async getExpenseById(req: Request, res: Response, next: NextFunction) {
+  static async getExpenseById(req: AuthRequest, res: Response) {
+    const userId = req.user?.id;
     const id = parseInt(req.params.id);
-    const expense = await prisma.expense.findUnique({
-      where: { id },
+    const expense = await prisma.expense.findFirst({
+      where: { id, user: { id: userId } },
       include: { category: true },
     });
 
@@ -97,7 +98,9 @@ export class ExpenseController {
     }
   }
 
-  static async postExpense(req: Request, res: Response, next: NextFunction) {
+  static async postExpense(req: AuthRequest, res: Response) {
+    const userId = req.user?.id;
+
     const { description, type, value, category_name } = req.body as ExpenseBody;
     const expense = await prisma.expense.create({
       data: {
@@ -109,19 +112,25 @@ export class ExpenseController {
             name: category_name,
           },
         },
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
       },
     });
 
     res.status(201).json(expense);
   }
 
-  static async updateExpense(req: Request, res: Response, next: NextFunction) {
+  static async updateExpense(req: AuthRequest, res: Response) {
+    const userId = req.user?.id;
     const id = parseInt(req.params.id);
     const { type, description, value, category_name } = req.body as ExpenseBody;
 
     try {
       const expense = await prisma.expense.update({
-        where: { id },
+        where: { user: { id: userId }, id },
         data: {
           type: type,
           description: description,
@@ -147,11 +156,12 @@ export class ExpenseController {
     }
   }
 
-  static async deleteExpense(req: Request, res: Response, next: NextFunction) {
+  static async deleteExpense(req: AuthRequest, res: Response) {
+    const userId = req.user?.id;
     const id = parseInt(req.params.id);
     try {
       await prisma.expense.delete({
-        where: { id },
+        where: { id, user: { id: userId } },
       });
 
       res.sendStatus(204);
