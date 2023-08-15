@@ -48,7 +48,6 @@ export class TransactionController {
     });
 
     req.body = JSON.parse(response.data.choices[0].message.content)["transactions"];
-    // res.json(req.body);
     next();
   }
 
@@ -122,8 +121,11 @@ export class TransactionController {
   static async #postTransactionList(transactions: [TransactionBody], userId: number) {
     const createdTransactions: any = [];
     for (const transaction of transactions) {
-      TransactionController.#postTransactionObject(transaction, userId);
-      createdTransactions.push(transaction);
+      const createdTransaction = await TransactionController.#postTransactionObject(
+        transaction,
+        userId
+      );
+      createdTransactions.push(createdTransaction);
     }
 
     return createdTransactions;
