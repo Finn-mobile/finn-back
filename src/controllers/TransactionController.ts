@@ -134,6 +134,7 @@ export class TransactionController {
   static async #postTransactionObject(transaction: TransactionBody, userId: number) {
     const { description, type, amount, category_name } = transaction;
     const createdTransaction = await prisma.transaction.create({
+      include: { category: true },
       data: {
         description,
         type,
