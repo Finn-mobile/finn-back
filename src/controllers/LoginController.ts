@@ -8,6 +8,8 @@ export class LoginController {
   static async login(req: Request, res: Response, next: NextFunction) {
     const { email, password } = req.body;
 
+    if (!email || !password) return res.status(401).json({ error: "Invalid email or password" });
+
     const user = await prisma.user.findUnique({
       where: {
         email,
@@ -32,18 +34,30 @@ export class LoginController {
   }
 
   static async signup(req: Request, res: Response, next: NextFunction) {
-    const { email, password } = req.body;
+    const { email, password, name } = req.body;
+
+    if (!email || !password || !name) return res.status(401).json({ error: "Missing email, password or name"})
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
+  
+    const user = await prisma.user.findUnique({
+      where: {
         email,
-        password: hashedPassword,
       },
     });
 
-    const { password: _, ...createdUser } = user;
-    res.json({ createdUser });
+    if (user) return res.status(401).json({ error: "Email is taken" });
+    
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name
+      },
+    });
+
+    const { password: _, ...createdUser } = newUser;
+    res.status(201).json({ createdUser });
   }
 }
